@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cyber Security Scanner</title>
+
+  <style>
+    h1 {
+  text-shadow: 0 0 10px #00ff00;
+}
+
+p, li {
+  text-shadow: 0 0 5px #00ff00;
+}
+
+input, button {
+  box-shadow: 0 0 10px #00ff00;
+}
+  </style>
+
+</head>
+
+<body>
+
+<h1>🛡️ Cyber Security Scanner</h1>
+
+<p>Total Vulnerabilities: <span id="count">0</span></p>
+
+<input type="text" id="input" placeholder="Enter input to scan"><br><br>
+
+<button onclick="scan()">Scan</button>
+
+<p id="result"></p>
+
+<h3>📋 Scan Log:</h3>
+<ul id="log"></ul>
+
+<script>
+let count = 0;
+
+function scan() {
+  let input = document.getElementById("input").value;
+  let resultText = "";
+  let severity = "";
+
+  if (input.includes("' OR '1'='1")) {
+    resultText = "SQL Injection Detected!";
+    severity = "HIGH 🚨";
+    count++;
+
+  } else if (input.includes("<script>")) {
+    resultText = "XSS Attack Detected!";
+    severity = "HIGH 🚨";
+    count++;
+
+  } else if (input.length < 4) {
+    resultText = "Weak Input Detected!";
+    severity = "LOW ⚠️";
+    count++;
+
+  } else {
+    resultText = "Safe Input";
+    severity = "NONE ✅";
+  }
+
+  document.getElementById("result").innerText = resultText;
+  document.getElementById("count").innerText = count;
+
+  let log = document.getElementById("log");
+  let li = document.createElement("li");
+
+  let now = new Date().toLocaleTimeString();
+
+  li.innerText = "[" + now + "] " + input + " → " + resultText + " (" + severity + ")";
+
+  log.appendChild(li);
+}
+</script>
+
+</body>
+</html>
