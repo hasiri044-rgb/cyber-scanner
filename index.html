@@ -2,72 +2,103 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Secure SOC - Hanan</title>
+<title>Cyber SOC - Hanan</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
-    margin:0;
-    font-family:Arial;
-    background:#0b1220;
-    color:white;
+    margin: 0;
+    font-family: Arial;
+    background: #0b1220;
+    color: white;
 }
 
+/* LOGIN */
 .center {
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .box {
-    background:#111827;
-    padding:25px;
-    border-radius:12px;
-    width:300px;
+    background: #111827;
+    padding: 25px;
+    border-radius: 12px;
+    width: 300px;
 }
 
 input, button {
-    width:100%;
-    padding:10px;
-    margin-top:10px;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
 }
 
 input {
-    background:#0b0f14;
-    border:1px solid #1f2937;
-    color:white;
+    background: #0b0f14;
+    border: 1px solid #1f2937;
+    color: white;
 }
 
 button {
-    background:#2563eb;
-    border:none;
-    color:white;
-    cursor:pointer;
+    background: #2563eb;
+    border: none;
+    color: white;
+    cursor: pointer;
 }
 
+/* DASHBOARD */
 #app {
-    display:none;
-    padding:20px;
+    display: none;
 }
 
 header {
-    text-align:center;
-    padding:15px;
-    background:#111827;
+    text-align: center;
+    padding: 15px;
+    background: #111827;
+    border-bottom: 1px solid #1f2937;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 15px;
 }
 
 .card {
-    background:#111827;
-    padding:15px;
-    border-radius:12px;
-    margin-top:15px;
+    background: #111827;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #1f2937;
 }
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.CRITICAL { background: red; }
+.HIGH { background: orange; }
+.MEDIUM { background: gold; color: black; }
+.LOW { background: green; }
 </style>
 </head>
 
 <body>
-    
-<!-- APP -->
+
+<!-- LOGIN -->
+<div id="login" class="center">
+    <div class="box">
+        <h2>Enter SOC Dashboard</h2>
+        <input id="user" placeholder="Enter your name">
+        <button onclick="enter()">Continue</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
 <div id="app">
 
 <header>
@@ -76,56 +107,57 @@ header {
 <button onclick="logout()">Logout</button>
 </header>
 
+<div class="container">
+
 <div class="card">
-<h3>Welcome <span id="who"></span></h3>
-<p>Status: Logged In</p>
+<h3>Analyze Vulnerability</h3>
+<input id="cvss" placeholder="Enter CVSS (0-10)">
+<button onclick="addVuln()">Add</button>
+</div>
+
+<div class="card">
+<h3>Welcome</h3>
+<p id="who"></p>
+<p id="stats"></p>
+</div>
+
+<div class="card">
+<h3>Vulnerabilities</h3>
+<ul id="list"></ul>
+</div>
+
+<div class="card">
+<h3>Risk Chart</h3>
+<canvas id="chart"></canvas>
+</div>
+
 </div>
 
 </div>
 
 <script>
 
-// USERS (هذا يعتبر قاعدة بيانات بسيطة)
-const users = [
-    {username:"hanan", password:"1234", role:"admin"},
-    {username:"analyst", password:"1111", role:"user"}
-];
+let data = JSON.parse(localStorage.getItem("soc")) || [];
+let chart;
 
-// LOGIN
-function login() {
+// LOGIN (no password)
+function enter() {
 
-    let u = document.getElementById("user").value;
-    let p = document.getElementById("pass").value;
+    let name = document.getElementById("user").value;
 
-    let found = users.find(x => x.username === u && x.password === p);
-
-    if(found) {
-
-        sessionStorage.setItem("user", JSON.stringify(found));
-
-        document.getElementById("login").style.display="none";
-        document.getElementById("app").style.display="block";
-
-        document.getElementById("who").innerText = found.username;
-
-    } else {
-        alert("Invalid credentials");
+    if(name.trim() === "") {
+        alert("Enter name");
+        return;
     }
-}
 
-// CHECK SESSION (حقيقي داخل المتصفح)
-function checkSession() {
+    sessionStorage.setItem("user", name);
 
-    let user = sessionStorage.getItem("user");
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
 
-    if(user) {
-        user = JSON.parse(user);
+    document.getElementById("who").innerText = "User: " + name;
 
-        document.getElementById("login").style.display="none";
-        document.getElementById("app").style.display="block";
-
-        document.getElementById("who").innerText = user.username;
-    }
+    update();
 }
 
 // LOGOUT
@@ -134,7 +166,82 @@ function logout() {
     location.reload();
 }
 
-checkSession();
+// CHECK SESSION
+function check() {
+    let user = sessionStorage.getItem("user");
+
+    if(user) {
+        document.getElementById("login").style.display="none";
+        document.getElementById("app").style.display="block";
+        document.getElementById("who").innerText = "User: " + user;
+        update();
+    }
+}
+
+// CLASSIFY
+function classify(cvss) {
+    if(cvss >= 9) return "CRITICAL";
+    if(cvss >= 7) return "HIGH";
+    if(cvss >= 4) return "MEDIUM";
+    return "LOW";
+}
+
+// ADD VULNERABILITY
+function addVuln() {
+
+    let cvss = parseFloat(document.getElementById("cvss").value);
+    let level = classify(cvss);
+
+    data.push({cvss, level});
+    localStorage.setItem("soc", JSON.stringify(data));
+
+    update();
+}
+
+// UPDATE UI
+function update() {
+
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
+
+    data.forEach(v => {
+
+        count[v.level]++;
+
+        let li = document.createElement("li");
+        li.innerHTML = `
+            CVSS ${v.cvss}
+            <span class="badge ${v.level}">${v.level}</span>
+        `;
+        list.appendChild(li);
+    });
+
+    document.getElementById("stats").innerText =
+        "Total: " + data.length;
+
+    draw(count);
+}
+
+// CHART
+function draw(c) {
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"), {
+        type: "pie",
+        data: {
+            labels: ["Critical","High","Medium","Low"],
+            datasets: [{
+                data: [c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
+                backgroundColor: ["red","orange","gold","green"]
+            }]
+        }
+    });
+}
+
+check();
 
 </script>
 
