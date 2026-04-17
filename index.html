@@ -1,167 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hanan Cyber Scanner</title>
+<meta charset="UTF-8">
+<title>Cyber Scanner - Hanan</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      color: #00ff00;
-      font-family: monospace;
-      text-align: center;
-      overflow: hidden;
-    }
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0b0f14;
+    color: white;
+}
 
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: -1;
-    }
+header {
+    text-align: center;
+    padding: 20px;
+    background: #111826;
+    border-bottom: 1px solid #1f2937;
+}
 
-    h1 {
-      margin-top: 50px;
-      text-shadow: 0 0 15px #00ff00;
-    }
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
 
-    input, button {
-      background: black;
-      color: #00ff00;
-      border: 1px solid #00ff00;
-      padding: 10px;
-      margin: 5px;
-      box-shadow: 0 0 10px #00ff00;
-    }
+.card {
+    background: #111826;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #1f2937;
+}
 
-    button:hover {
-      background: #00ff00;
-      color: black;
-    }
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #0b0f14;
+    border: 1px solid #1f2937;
+    color: white;
+}
 
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+button {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
 
-    li {
-      border: 1px solid #00ff00;
-      margin: 5px;
-      padding: 10px;
-    }
-
-    .high { color: red; text-shadow: 0 0 10px red; }
-    .low { color: yellow; text-shadow: 0 0 10px yellow; }
-    .safe { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
-  </style>
+ul {
+    padding-left: 20px;
+}
+</style>
 </head>
 
 <body>
 
-<canvas id="matrix"></canvas>
+<header>
+<h1>Cyber Scanner</h1>
+<p>Security Risk Intelligence Platform</p>
+<small>Developed by Hanan</small>
+</header>
 
-<h1>🛡️ Hanan Cyber Scanner</h1>
-<p>Developed by Hanan</p>
+<div class="container">
 
-<p>Total Vulnerabilities: <span id="count">0</span></p>
+<div class="card">
+<h2>Analyze Vulnerability</h2>
+<input id="cvss" placeholder="Enter CVSS Score (0 - 10)">
+<button onclick="analyze()">Analyze</button>
+</div>
 
-<input type="text" id="input" placeholder="Enter input to scan"><br>
+<div class="card" id="result">
+<h2>Result</h2>
+<p>No analysis yet</p>
+</div>
 
-<button onclick="scan()">Scan</button>
+<div class="card">
+<h2>History</h2>
+<ul id="history"></ul>
+</div>
 
-<p id="result"></p>
-
-<h3>📋 Scan Log:</h3>
-<ul id="log"></ul>
+</div>
 
 <script>
-// 🔥 Matrix Background
-let canvas = document.getElementById("matrix");
-let ctx = canvas.getContext("2d");
+function getRisk(cvss) {
+    let level, score, reason, fix, color;
 
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
+    if (cvss >= 9) {
+        level = "CRITICAL";
+        score = 95;
+        reason = "High exploitability and impact";
+        fix = "Immediate patch and isolation required";
+        color = "red";
+    } 
+    else if (cvss >= 7) {
+        level = "HIGH";
+        score = 80;
+        reason = "High risk vulnerability";
+        fix = "Fix within 24-72 hours";
+        color = "orange";
+    } 
+    else if (cvss >= 4) {
+        level = "MEDIUM";
+        score = 55;
+        reason = "Moderate risk, needs monitoring";
+        fix = "Schedule update";
+        color = "gold";
+    } 
+    else {
+        level = "LOW";
+        score = 20;
+        reason = "Low risk";
+        fix = "Monitor only";
+        color = "green";
+    }
 
-let letters = "01";
-letters = letters.split("");
-
-let fontSize = 14;
-let columns = canvas.width / fontSize;
-
-let drops = [];
-for (let i = 0; i < columns; i++) {
-  drops[i] = 1;
+    return { level, score, reason, fix, color };
 }
 
-function draw() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function analyze() {
+    let cvss = parseFloat(document.getElementById("cvss").value);
+    let r = getRisk(cvss);
 
-  ctx.fillStyle = "#00ff00";
-  ctx.font = fontSize + "px monospace";
+    document.getElementById("result").innerHTML =
+        "<h2 style='color:" + r.color + "'>" + r.level + "</h2>" +
+        "<p><b>Score:</b> " + r.score + "/100</p>" +
+        "<p><b>Reason:</b> " + r.reason + "</p>" +
+        "<p><b>Fix:</b> " + r.fix + "</p>" +
+        "<small>Developed by Hanan</small>";
 
-  for (let i = 0; i < drops.length; i++) {
-    let text = letters[Math.floor(Math.random() * letters.length)];
-    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-      drops[i] = 0;
-
-    drops[i]++;
-  }
-}
-
-setInterval(draw, 33);
-
-// 🔐 Scanner Logic
-let count = 0;
-
-function scan() {
-  let input = document.getElementById("input").value;
-  let resultText = "";
-  let severity = "";
-
-  if (input.includes("' OR '1'='1")) {
-    resultText = "SQL Injection Detected!";
-    severity = "HIGH 🚨";
-    count++;
-
-  } else if (input.includes("<script>")) {
-    resultText = "XSS Attack Detected!";
-    severity = "HIGH 🚨";
-    count++;
-
-  } else if (input.length < 4) {
-    resultText = "Weak Input Detected!";
-    severity = "LOW ⚠️";
-    count++;
-
-  } else {
-    resultText = "Safe Input";
-    severity = "NONE ✅";
-  }
-
-  let result = document.getElementById("result");
-  result.innerText = resultText;
-  result.className = "";
-
-  if (severity.includes("HIGH")) result.classList.add("high");
-  else if (severity.includes("LOW")) result.classList.add("low");
-  else result.classList.add("safe");
-
-  document.getElementById("count").innerText = count;
-
-  let log = document.getElementById("log");
-  let li = document.createElement("li");
-
-  let now = new Date().toLocaleTimeString();
-  li.innerText = "[" + now + "] " + input + " → " + resultText + " (" + severity + ")";
-
-  if (severity.includes("HIGH")) li.classList.add("high");
-  else if (severity.includes("LOW")) li.classList.add("low");
-  else li.classList.add("safe");
-
-  log.appendChild(li);
+    let li = document.createElement("li");
+    li.textContent = "CVSS " + cvss + " → " + r.level;
+    document.getElementById("history").appendChild(li);
 }
 </script>
 
