@@ -1,31 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cyber Security Scanner</title>
+  <title>Hanan Cyber Scanner</title>
 
   <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
     h1 {
-  text-shadow: 0 0 10px #00ff00;
-}
+      margin-top: 50px;
+      text-shadow: 0 0 15px #00ff00;
+    }
 
-p, li {
-  text-shadow: 0 0 5px #00ff00;
-}
+    input, button {
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      margin: 5px;
+      box-shadow: 0 0 10px #00ff00;
+    }
 
-input, button {
-  box-shadow: 0 0 10px #00ff00;
-}
+    button:hover {
+      background: #00ff00;
+      color: black;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      border: 1px solid #00ff00;
+      margin: 5px;
+      padding: 10px;
+    }
+
+    .high { color: red; text-shadow: 0 0 10px red; }
+    .low { color: yellow; text-shadow: 0 0 10px yellow; }
+    .safe { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
   </style>
-
 </head>
 
 <body>
 
-<h1>🛡️ Cyber Security Scanner</h1>
+<canvas id="matrix"></canvas>
+
+<h1>🛡️ Hanan Cyber Scanner</h1>
+<p>Developed by Hanan</p>
 
 <p>Total Vulnerabilities: <span id="count">0</span></p>
 
-<input type="text" id="input" placeholder="Enter input to scan"><br><br>
+<input type="text" id="input" placeholder="Enter input to scan"><br>
 
 <button onclick="scan()">Scan</button>
 
@@ -35,6 +75,45 @@ input, button {
 <ul id="log"></ul>
 
 <script>
+// 🔥 Matrix Background
+let canvas = document.getElementById("matrix");
+let ctx = canvas.getContext("2d");
+
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+let letters = "01";
+letters = letters.split("");
+
+let fontSize = 14;
+let columns = canvas.width / fontSize;
+
+let drops = [];
+for (let i = 0; i < columns; i++) {
+  drops[i] = 1;
+}
+
+function draw() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ff00";
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    let text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+      drops[i] = 0;
+
+    drops[i]++;
+  }
+}
+
+setInterval(draw, 33);
+
+// 🔐 Scanner Logic
 let count = 0;
 
 function scan() {
@@ -62,15 +141,25 @@ function scan() {
     severity = "NONE ✅";
   }
 
-  document.getElementById("result").innerText = resultText;
+  let result = document.getElementById("result");
+  result.innerText = resultText;
+  result.className = "";
+
+  if (severity.includes("HIGH")) result.classList.add("high");
+  else if (severity.includes("LOW")) result.classList.add("low");
+  else result.classList.add("safe");
+
   document.getElementById("count").innerText = count;
 
   let log = document.getElementById("log");
   let li = document.createElement("li");
 
   let now = new Date().toLocaleTimeString();
-
   li.innerText = "[" + now + "] " + input + " → " + resultText + " (" + severity + ")";
+
+  if (severity.includes("HIGH")) li.classList.add("high");
+  else if (severity.includes("LOW")) li.classList.add("low");
+  else li.classList.add("safe");
 
   log.appendChild(li);
 }
