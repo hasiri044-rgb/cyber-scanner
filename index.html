@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Cyber SOC - Hanan</title>
+<title>Hanan SOC Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
     margin: 0;
-    font-family: Arial;
-    background: #0b1220;
-    color: white;
+    font-family: "Segoe UI", Arial;
+    background: #0f172a;
+    color: #e5e7eb;
 }
 
 /* LOGIN */
@@ -23,32 +23,38 @@ body {
 }
 
 .box {
-    background: #111827;
-    padding: 25px;
+    background: #1e293b;
+    padding: 30px;
     border-radius: 12px;
     width: 300px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 input, button {
     width: 100%;
     padding: 10px;
     margin-top: 10px;
+    border-radius: 8px;
 }
 
 input {
-    background: #0b0f14;
-    border: 1px solid #1f2937;
-    color: white;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #e5e7eb;
 }
 
 button {
-    background: #2563eb;
+    background: #3b82f6;
     border: none;
     color: white;
     cursor: pointer;
 }
 
-/* DASHBOARD */
+button:hover {
+    background: #2563eb;
+}
+
+/* APP */
 #app {
     display: none;
 }
@@ -56,8 +62,15 @@ button {
 header {
     text-align: center;
     padding: 15px;
-    background: #111827;
-    border-bottom: 1px solid #1f2937;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+}
+
+header button {
+    margin-top: 10px;
+    width: auto;
+    padding: 6px 12px;
+    background: #ef4444;
 }
 
 .container {
@@ -68,22 +81,28 @@ header {
 }
 
 .card {
-    background: #111827;
+    background: #1e293b;
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #1f2937;
+    border: 1px solid #334155;
 }
 
+/* BADGES */
 .badge {
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 12px;
+    margin-left: 10px;
 }
 
-.CRITICAL { background: red; }
-.HIGH { background: orange; }
-.MEDIUM { background: gold; color: black; }
-.LOW { background: green; }
+.CRITICAL { background: #dc2626; }
+.HIGH { background: #f97316; }
+.MEDIUM { background: #facc15; color: black; }
+.LOW { background: #22c55e; }
+
+li {
+    margin-top: 8px;
+}
 </style>
 </head>
 
@@ -92,31 +111,31 @@ header {
 <!-- LOGIN -->
 <div id="login" class="center">
     <div class="box">
-        <h2>Enter SOC Dashboard</h2>
-        <input id="user" placeholder="Enter your name">
+        <h2>Enter Dashboard</h2>
+        <input id="user" placeholder="Your name">
         <button onclick="enter()">Continue</button>
     </div>
 </div>
 
-<!-- DASHBOARD -->
+<!-- APP -->
 <div id="app">
 
 <header>
-<h2>Cyber SOC Dashboard</h2>
-<small>Developed by Hanan</small>
+<h2>Hanan SOC Dashboard</h2>
+<small>Cyber Security Monitoring</small><br>
 <button onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
 <div class="card">
-<h3>Analyze Vulnerability</h3>
-<input id="cvss" placeholder="Enter CVSS (0-10)">
+<h3>Add Vulnerability</h3>
+<input id="cvss" placeholder="Enter CVSS (0 - 10)">
 <button onclick="addVuln()">Add</button>
 </div>
 
 <div class="card">
-<h3>Welcome</h3>
+<h3>User Info</h3>
 <p id="who"></p>
 <p id="stats"></p>
 </div>
@@ -140,13 +159,12 @@ header {
 let data = JSON.parse(localStorage.getItem("soc")) || [];
 let chart;
 
-// LOGIN (no password)
+// LOGIN
 function enter() {
-
     let name = document.getElementById("user").value;
 
     if(name.trim() === "") {
-        alert("Enter name");
+        alert("Enter your name");
         return;
     }
 
@@ -166,7 +184,7 @@ function logout() {
     location.reload();
 }
 
-// CHECK SESSION
+// SESSION CHECK
 function check() {
     let user = sessionStorage.getItem("user");
 
@@ -186,25 +204,36 @@ function classify(cvss) {
     return "LOW";
 }
 
-// ADD VULNERABILITY
+// ADD
 function addVuln() {
 
     let cvss = parseFloat(document.getElementById("cvss").value);
+
+    if(isNaN(cvss) || cvss < 0 || cvss > 10) {
+        alert("Enter valid CVSS (0-10)");
+        return;
+    }
+
     let level = classify(cvss);
 
-    data.push({cvss, level});
+    data.push({
+        cvss,
+        level,
+        time: new Date().toLocaleTimeString()
+    });
+
     localStorage.setItem("soc", JSON.stringify(data));
 
     update();
 }
 
-// UPDATE UI
+// UPDATE
 function update() {
 
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
+    let count = {CRITICAL:0, HIGH:0, MEDIUM:0, LOW:0};
 
     data.forEach(v => {
 
@@ -212,7 +241,7 @@ function update() {
 
         let li = document.createElement("li");
         li.innerHTML = `
-            CVSS ${v.cvss}
+            [${v.time}] CVSS ${v.cvss}
             <span class="badge ${v.level}">${v.level}</span>
         `;
         list.appendChild(li);
@@ -227,20 +256,28 @@ function update() {
 // CHART
 function draw(c) {
 
-    if(chart) chart.destroy();
+    const canvas = document.getElementById("chart");
 
-    chart = new Chart(document.getElementById("chart"), {
+    if (chart) chart.destroy();
+
+    chart = new Chart(canvas, {
         type: "pie",
         data: {
-            labels: ["Critical","High","Medium","Low"],
+            labels: ["Critical", "High", "Medium", "Low"],
             datasets: [{
-                data: [c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
-                backgroundColor: ["red","orange","gold","green"]
+                data: [
+                    c.CRITICAL,
+                    c.HIGH,
+                    c.MEDIUM,
+                    c.LOW
+                ],
+                backgroundColor: ["#dc2626","#f97316","#facc15","#22c55e"]
             }]
         }
     });
 }
 
+// INIT
 check();
 
 </script>
