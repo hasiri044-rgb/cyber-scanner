@@ -59,20 +59,33 @@ button:hover {
     display: none;
 }
 
-header {
-    text-align: center;
-    padding: 15px;
-    background: #1e293b;
-    border-bottom: 1px solid #334155;
-}
+<header style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#1e293b;">
 
-header button {
-    margin-top: 10px;
-    width: auto;
-    padding: 6px 12px;
-    background: #ef4444;
-}
+<div>
+<h2>Hanan SOC Dashboard</h2>
+<small>Cyber Security Monitoring</small>
+</div>
 
+<div>
+<button onclick="logout()" style="background:#ef4444; padding:6px 10px; border:none; border-radius:6px; color:white; cursor:pointer;">
+Logout
+</button>
+
+<button onclick="clearData()" style="
+background:#f9a8d4;
+border:none;
+width:28px;
+height:28px;
+border-radius:50%;
+margin-left:8px;
+cursor:pointer;
+font-size:14px;">
+💖
+</button>
+
+</div>
+
+</header>
 .container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -195,7 +208,10 @@ function check() {
         update();
     }
 }
-
+function clearData() {
+    data = [];
+    update();
+}
 // CLASSIFY
 function classify(cvss) {
     if(cvss >= 9) return "CRITICAL";
