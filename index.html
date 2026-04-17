@@ -2,31 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Enterprise SOC - Hanan</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Secure SOC - Hanan</title>
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial;
-    background: #0b1220;
-    color: #e5e7eb;
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
 }
 
-/* Login */
-#login {
-    display:flex;
+.center {
     height:100vh;
+    display:flex;
     justify-content:center;
     align-items:center;
-    background:#0b1220;
 }
 
-.login-box {
+.box {
     background:#111827;
-    padding:30px;
+    padding:25px;
     border-radius:12px;
     width:300px;
 }
@@ -45,57 +40,37 @@ input {
 
 button {
     background:#2563eb;
-    color:white;
     border:none;
+    color:white;
     cursor:pointer;
 }
 
-/* Dashboard */
 #app {
     display:none;
+    padding:20px;
 }
 
 header {
     text-align:center;
     padding:15px;
     background:#111827;
-    border-bottom:1px solid #1f2937;
-}
-
-.container {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
-    gap:15px;
-    padding:15px;
 }
 
 .card {
     background:#111827;
     padding:15px;
     border-radius:12px;
-    border:1px solid #1f2937;
+    margin-top:15px;
 }
-
-.badge {
-    padding:4px 8px;
-    border-radius:6px;
-    font-size:12px;
-    color:white;
-}
-
-.CRITICAL {background:red;}
-.HIGH {background:orange;}
-.MEDIUM {background:gold; color:black;}
-.LOW {background:green;}
 </style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<div id="login">
-    <div class="login-box">
-        <h2>Admin Login</h2>
+<div id="login" class="center">
+    <div class="box">
+        <h2>Login</h2>
         <input id="user" placeholder="Username">
         <input id="pass" type="password" placeholder="Password">
         <button onclick="login()">Login</button>
@@ -106,129 +81,70 @@ header {
 <div id="app">
 
 <header>
-<h2>Enterprise SOC Dashboard</h2>
+<h2>Cyber SOC Dashboard</h2>
 <small>Developed by Hanan</small>
+<button onclick="logout()">Logout</button>
 </header>
 
-<div class="container">
-
 <div class="card">
-<h3>Add Vulnerability</h3>
-<input id="cvss" placeholder="CVSS (0-10)">
-<button onclick="addVuln()">Add</button>
-</div>
-
-<div class="card">
-<h3>Stats</h3>
-<p id="stats"></p>
-<button onclick="exportPDF()">Export Report</button>
-</div>
-
-<div class="card">
-<h3>Vulnerabilities</h3>
-<ul id="list"></ul>
-</div>
-
-<div class="card">
-<h3>Risk Overview</h3>
-<canvas id="chart"></canvas>
-</div>
-
+<h3>Welcome <span id="who"></span></h3>
+<p>Status: Logged In</p>
 </div>
 
 </div>
 
 <script>
 
-let data = JSON.parse(localStorage.getItem("soc_data")) || [];
-let chart;
+// USERS (هذا يعتبر قاعدة بيانات بسيطة)
+const users = [
+    {username:"hanan", password:"1234", role:"admin"},
+    {username:"analyst", password:"1111", role:"user"}
+];
 
+// LOGIN
 function login() {
+
     let u = document.getElementById("user").value;
     let p = document.getElementById("pass").value;
 
-    if(u === "admin" && p === "admin") {
+    let found = users.find(x => x.username === u && x.password === p);
+
+    if(found) {
+
+        sessionStorage.setItem("user", JSON.stringify(found));
+
         document.getElementById("login").style.display="none";
         document.getElementById("app").style.display="block";
-        update();
+
+        document.getElementById("who").innerText = found.username;
+
     } else {
-        alert("Invalid login");
+        alert("Invalid credentials");
     }
 }
 
-function classify(cvss) {
-    if(cvss >= 9) return "CRITICAL";
-    if(cvss >= 7) return "HIGH";
-    if(cvss >= 4) return "MEDIUM";
-    return "LOW";
+// CHECK SESSION (حقيقي داخل المتصفح)
+function checkSession() {
+
+    let user = sessionStorage.getItem("user");
+
+    if(user) {
+        user = JSON.parse(user);
+
+        document.getElementById("login").style.display="none";
+        document.getElementById("app").style.display="block";
+
+        document.getElementById("who").innerText = user.username;
+    }
 }
 
-function addVuln() {
-
-    let cvss = parseFloat(document.getElementById("cvss").value);
-    let level = classify(cvss);
-
-    data.push({cvss, level});
-    localStorage.setItem("soc_data", JSON.stringify(data));
-
-    update();
+// LOGOUT
+function logout() {
+    sessionStorage.removeItem("user");
+    location.reload();
 }
 
-function update() {
-
-    let list = document.getElementById("list");
-    list.innerHTML = "";
-
-    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
-
-    data.forEach(v => {
-        count[v.level]++;
-
-        let li = document.createElement("li");
-        li.innerHTML = `
-        CVSS ${v.cvss}
-        <span class="badge ${v.level}">${v.level}</span>
-        `;
-        list.appendChild(li);
-    });
-
-    document.getElementById("stats").innerText =
-        `Total: ${data.length} | Critical: ${count.CRITICAL}`;
-
-    drawChart(count);
-}
-
-function drawChart(c) {
-
-    if(chart) chart.destroy();
-
-    chart = new Chart(document.getElementById("chart"), {
-        type:"pie",
-        data:{
-            labels:["Critical","High","Medium","Low"],
-            datasets:[{
-                data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
-                backgroundColor:["red","orange","gold","green"]
-            }]
-        }
-    });
-}
-
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    let doc = new jsPDF();
-
-    doc.text("SOC Report - Hanan", 10, 10);
-    doc.text("Total Vulnerabilities: " + data.length, 10, 20);
-
-    let y = 30;
-    data.forEach(v => {
-        doc.text(`CVSS ${v.cvss} - ${v.level}`, 10, y);
-        y += 10;
-    });
-
-    doc.save("soc-report.pdf");
-}
+checkSession();
 
 </script>
 
