@@ -2,141 +2,234 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Scanner - Hanan</title>
+<title>Enterprise SOC - Hanan</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: #0b0f14;
-    color: white;
+    background: #0b1220;
+    color: #e5e7eb;
 }
 
-header {
-    text-align: center;
-    padding: 20px;
-    background: #111826;
-    border-bottom: 1px solid #1f2937;
+/* Login */
+#login {
+    display:flex;
+    height:100vh;
+    justify-content:center;
+    align-items:center;
+    background:#0b1220;
 }
 
-.container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    padding: 20px;
+.login-box {
+    background:#111827;
+    padding:30px;
+    border-radius:12px;
+    width:300px;
 }
 
-.card {
-    background: #111826;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #1f2937;
+input, button {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
 }
 
 input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: #0b0f14;
-    border: 1px solid #1f2937;
-    color: white;
+    background:#0b0f14;
+    border:1px solid #1f2937;
+    color:white;
 }
 
 button {
-    margin-top: 10px;
-    width: 100%;
-    padding: 10px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    cursor: pointer;
+    background:#2563eb;
+    color:white;
+    border:none;
+    cursor:pointer;
 }
 
-ul {
-    padding-left: 20px;
+/* Dashboard */
+#app {
+    display:none;
 }
+
+header {
+    text-align:center;
+    padding:15px;
+    background:#111827;
+    border-bottom:1px solid #1f2937;
+}
+
+.container {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    gap:15px;
+    padding:15px;
+}
+
+.card {
+    background:#111827;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid #1f2937;
+}
+
+.badge {
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:12px;
+    color:white;
+}
+
+.CRITICAL {background:red;}
+.HIGH {background:orange;}
+.MEDIUM {background:gold; color:black;}
+.LOW {background:green;}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+<div id="login">
+    <div class="login-box">
+        <h2>Admin Login</h2>
+        <input id="user" placeholder="Username">
+        <input id="pass" type="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
 <header>
-<h1>Cyber Scanner</h1>
-<p>Security Risk Intelligence Platform</p>
+<h2>Enterprise SOC Dashboard</h2>
 <small>Developed by Hanan</small>
 </header>
 
 <div class="container">
 
 <div class="card">
-<h2>Analyze Vulnerability</h2>
-<input id="cvss" placeholder="Enter CVSS Score (0 - 10)">
-<button onclick="analyze()">Analyze</button>
-</div>
-
-<div class="card" id="result">
-<h2>Result</h2>
-<p>No analysis yet</p>
+<h3>Add Vulnerability</h3>
+<input id="cvss" placeholder="CVSS (0-10)">
+<button onclick="addVuln()">Add</button>
 </div>
 
 <div class="card">
-<h2>History</h2>
-<ul id="history"></ul>
+<h3>Stats</h3>
+<p id="stats"></p>
+<button onclick="exportPDF()">Export Report</button>
+</div>
+
+<div class="card">
+<h3>Vulnerabilities</h3>
+<ul id="list"></ul>
+</div>
+
+<div class="card">
+<h3>Risk Overview</h3>
+<canvas id="chart"></canvas>
+</div>
+
 </div>
 
 </div>
 
 <script>
-function getRisk(cvss) {
-    let level, score, reason, fix, color;
 
-    if (cvss >= 9) {
-        level = "CRITICAL";
-        score = 95;
-        reason = "High exploitability and impact";
-        fix = "Immediate patch and isolation required";
-        color = "red";
-    } 
-    else if (cvss >= 7) {
-        level = "HIGH";
-        score = 80;
-        reason = "High risk vulnerability";
-        fix = "Fix within 24-72 hours";
-        color = "orange";
-    } 
-    else if (cvss >= 4) {
-        level = "MEDIUM";
-        score = 55;
-        reason = "Moderate risk, needs monitoring";
-        fix = "Schedule update";
-        color = "gold";
-    } 
-    else {
-        level = "LOW";
-        score = 20;
-        reason = "Low risk";
-        fix = "Monitor only";
-        color = "green";
+let data = JSON.parse(localStorage.getItem("soc_data")) || [];
+let chart;
+
+function login() {
+    let u = document.getElementById("user").value;
+    let p = document.getElementById("pass").value;
+
+    if(u === "admin" && p === "admin") {
+        document.getElementById("login").style.display="none";
+        document.getElementById("app").style.display="block";
+        update();
+    } else {
+        alert("Invalid login");
     }
-
-    return { level, score, reason, fix, color };
 }
 
-function analyze() {
+function classify(cvss) {
+    if(cvss >= 9) return "CRITICAL";
+    if(cvss >= 7) return "HIGH";
+    if(cvss >= 4) return "MEDIUM";
+    return "LOW";
+}
+
+function addVuln() {
+
     let cvss = parseFloat(document.getElementById("cvss").value);
-    let r = getRisk(cvss);
+    let level = classify(cvss);
 
-    document.getElementById("result").innerHTML =
-        "<h2 style='color:" + r.color + "'>" + r.level + "</h2>" +
-        "<p><b>Score:</b> " + r.score + "/100</p>" +
-        "<p><b>Reason:</b> " + r.reason + "</p>" +
-        "<p><b>Fix:</b> " + r.fix + "</p>" +
-        "<small>Developed by Hanan</small>";
+    data.push({cvss, level});
+    localStorage.setItem("soc_data", JSON.stringify(data));
 
-    let li = document.createElement("li");
-    li.textContent = "CVSS " + cvss + " → " + r.level;
-    document.getElementById("history").appendChild(li);
+    update();
 }
+
+function update() {
+
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
+
+    data.forEach(v => {
+        count[v.level]++;
+
+        let li = document.createElement("li");
+        li.innerHTML = `
+        CVSS ${v.cvss}
+        <span class="badge ${v.level}">${v.level}</span>
+        `;
+        list.appendChild(li);
+    });
+
+    document.getElementById("stats").innerText =
+        `Total: ${data.length} | Critical: ${count.CRITICAL}`;
+
+    drawChart(count);
+}
+
+function drawChart(c) {
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"), {
+        type:"pie",
+        data:{
+            labels:["Critical","High","Medium","Low"],
+            datasets:[{
+                data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
+                backgroundColor:["red","orange","gold","green"]
+            }]
+        }
+    });
+}
+
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF();
+
+    doc.text("SOC Report - Hanan", 10, 10);
+    doc.text("Total Vulnerabilities: " + data.length, 10, 20);
+
+    let y = 30;
+    data.forEach(v => {
+        doc.text(`CVSS ${v.cvss} - ${v.level}`, 10, y);
+        y += 10;
+    });
+
+    doc.save("soc-report.pdf");
+}
+
 </script>
 
 </body>
