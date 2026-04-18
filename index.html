@@ -14,7 +14,6 @@ body {
     color: #e5e7eb;
 }
 
-/* LOGIN */
 .center {
     height: 100vh;
     display: flex;
@@ -29,14 +28,14 @@ body {
     width: 300px;
 }
 
-input, button {
+input, select, button {
     width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 8px;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 6px;
 }
 
-input {
+input, select {
     background: #0f172a;
     border: 1px solid #334155;
     color: #e5e7eb;
@@ -49,29 +48,14 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: #2563eb;
-}
-
-/* APP */
-#app {
-    display: none;
-}
+#app { display: none; }
 
 header {
     text-align: center;
     padding: 15px;
     background: #1e293b;
-    border-bottom: 1px solid #334155;
 }
 
-header button {
-    margin-top: 10px;
-    background: #ef4444;
-    padding: 6px 12px;
-}
-
-/* GRID */
 .container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -83,26 +67,17 @@ header button {
     background: #1e293b;
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #334155;
 }
 
-/* زر الحذف */
 .delete-btn {
     background: #334155;
+    color: white;
     border: none;
-    color: #e5e7eb;
     padding: 4px 10px;
     border-radius: 6px;
-    margin-left: 10px;
     cursor: pointer;
-    font-size: 12px;
 }
 
-.delete-btn:hover {
-    background: #475569;
-}
-
-/* BADGES */
 .badge {
     padding: 4px 8px;
     border-radius: 6px;
@@ -115,9 +90,6 @@ header button {
 .MEDIUM { background: #facc15; color: black; }
 .LOW { background: #22c55e; }
 
-li {
-    margin-top: 8px;
-}
 </style>
 </head>
 
@@ -125,11 +97,11 @@ li {
 
 <!-- LOGIN -->
 <div id="login" class="center">
-    <div class="box">
-        <h2>Enter Dashboard</h2>
-        <input id="user" placeholder="Your name">
-        <button onclick="enter()">Continue</button>
-    </div>
+<div class="box">
+<h2>Enter Dashboard</h2>
+<input id="user" placeholder="Your name">
+<button onclick="enter()">Continue</button>
+</div>
 </div>
 
 <!-- APP -->
@@ -137,7 +109,6 @@ li {
 
 <header>
 <h2>Hanan SOC Dashboard</h2>
-<small>Cyber Security Monitoring</small><br>
 <button onclick="logout()">Logout</button>
 </header>
 
@@ -145,7 +116,7 @@ li {
 
 <div class="card">
 <h3>Add Vulnerability</h3>
-<input id="cvss" placeholder="Enter CVSS (0 - 10)">
+<input id="cvss" placeholder="CVSS (0-10)">
 <button onclick="addVuln()">Add</button>
 </div>
 
@@ -160,6 +131,17 @@ li {
 Vulnerabilities
 <button onclick="clearData()" class="delete-btn">Clear</button>
 </h3>
+
+<input id="search" placeholder="Search..." oninput="update()">
+
+<select id="filter" onchange="update()">
+<option value="ALL">All</option>
+<option value="CRITICAL">Critical</option>
+<option value="HIGH">High</option>
+<option value="MEDIUM">Medium</option>
+<option value="LOW">Low</option>
+</select>
+
 <ul id="list"></ul>
 </div>
 
@@ -168,8 +150,12 @@ Vulnerabilities
 <canvas id="chart"></canvas>
 </div>
 
+<div class="card">
+<h3>Smart Analysis</h3>
+<p id="analysis"></p>
 </div>
 
+</div>
 </div>
 
 <script>
@@ -179,124 +165,134 @@ let chart;
 
 // LOGIN
 function enter() {
-    let name = document.getElementById("user").value;
+let name = document.getElementById("user").value;
+if(!name) return alert("Enter name");
 
-    if(name.trim() === "") {
-        alert("Enter your name");
-        return;
-    }
+sessionStorage.setItem("user", name);
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="block";
+document.getElementById("who").innerText = "User: " + name;
 
-    sessionStorage.setItem("user", name);
-
-    document.getElementById("login").style.display="none";
-    document.getElementById("app").style.display="block";
-
-    document.getElementById("who").innerText = "User: " + name;
-
-    update();
+update();
 }
 
-// LOGOUT
 function logout() {
-    sessionStorage.clear();
-    location.reload();
+sessionStorage.clear();
+location.reload();
 }
 
-// CHECK
 function check() {
-    let user = sessionStorage.getItem("user");
-
-    if(user) {
-        document.getElementById("login").style.display="none";
-        document.getElementById("app").style.display="block";
-        document.getElementById("who").innerText = "User: " + user;
-        update();
-    }
+let user = sessionStorage.getItem("user");
+if(user){
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="block";
+document.getElementById("who").innerText = "User: " + user;
+update();
 }
-
-// 🧹 حذف البيانات
-function clearData() {
-    data = [];
-    update();
-}
-
-// CLASSIFY
-function classify(cvss) {
-    if(cvss >= 9) return "CRITICAL";
-    if(cvss >= 7) return "HIGH";
-    if(cvss >= 4) return "MEDIUM";
-    return "LOW";
 }
 
 // ADD
 function addVuln() {
+let cvss = parseFloat(document.getElementById("cvss").value);
+if(isNaN(cvss) || cvss<0 || cvss>10) return alert("0-10 only");
 
-    let cvss = parseFloat(document.getElementById("cvss").value);
+let level = classify(cvss);
 
-    if(isNaN(cvss) || cvss < 0 || cvss > 10) {
-        alert("Enter valid CVSS (0-10)");
-        return;
-    }
+data.push({
+cvss,
+level,
+time: new Date().toLocaleTimeString()
+});
 
-    let level = classify(cvss);
+update();
+}
 
-    data.push({
-        cvss,
-        level,
-        time: new Date().toLocaleTimeString()
-    });
+// CLASSIFY
+function classify(cvss){
+if(cvss>=9) return "CRITICAL";
+if(cvss>=7) return "HIGH";
+if(cvss>=4) return "MEDIUM";
+return "LOW";
+}
 
-    update();
+// CLEAR
+function clearData(){
+data = [];
+update();
 }
 
 // UPDATE
-function update() {
+function update(){
 
-    let list = document.getElementById("list");
-    list.innerHTML = "";
+let list = document.getElementById("list");
+list.innerHTML="";
 
-    let count = {CRITICAL:0, HIGH:0, MEDIUM:0, LOW:0};
+let search = document.getElementById("search").value.toLowerCase();
+let filter = document.getElementById("filter").value;
 
-    data.forEach(v => {
+let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
 
-        count[v.level]++;
+data.forEach(v=>{
 
-        let li = document.createElement("li");
-        li.innerHTML = `
-            [${v.time}] CVSS ${v.cvss}
-            <span class="badge ${v.level}">${v.level}</span>
-        `;
-        list.appendChild(li);
-    });
+if(filter!=="ALL" && v.level!==filter) return;
+if(!v.cvss.toString().includes(search)) return;
 
-    document.getElementById("stats").innerText =
-        "Total: " + data.length;
+count[v.level]++;
 
-    draw(count);
+let li = document.createElement("li");
+li.innerHTML = `[${v.time}] CVSS ${v.cvss}
+<span class="badge ${v.level}">${v.level}</span>`;
+list.appendChild(li);
+
+});
+
+document.getElementById("stats").innerText = "Total: "+list.children.length;
+
+draw(count);
+analyze(count);
 }
 
 // CHART
-function draw(c) {
+function draw(c){
+const canvas = document.getElementById("chart");
 
-    const canvas = document.getElementById("chart");
+if(chart) chart.destroy();
 
-    if (chart) chart.destroy();
+chart = new Chart(canvas,{
+type:"pie",
+data:{
+labels:["Critical","High","Medium","Low"],
+datasets:[{
+data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
+backgroundColor:["#dc2626","#f97316","#facc15","#22c55e"]
+}]
+}
+});
+}
 
-    chart = new Chart(canvas, {
-        type: "pie",
-        data: {
-            labels: ["Critical", "High", "Medium", "Low"],
-            datasets: [{
-                data: [
-                    c.CRITICAL,
-                    c.HIGH,
-                    c.MEDIUM,
-                    c.LOW
-                ],
-                backgroundColor: ["#dc2626","#f97316","#facc15","#22c55e"]
-            }]
-        }
-    });
+// AI ANALYSIS
+function analyze(c){
+
+let total = c.CRITICAL + c.HIGH + c.MEDIUM + c.LOW;
+let text="";
+
+if(total===0){
+text="No data yet.";
+}
+else if(c.CRITICAL>0){
+text="🚨 High Risk: Critical vulnerabilities detected. Fix immediately.";
+}
+else if(c.HIGH>2){
+text="⚠️ Elevated Risk: Multiple high vulnerabilities.";
+}
+else if(c.MEDIUM>3){
+text="Moderate Risk: Needs review.";
+}
+else{
+text="✅ System stable.";
+}
+
+document.getElementById("analysis").innerText = text;
 }
 
 // INIT
