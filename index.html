@@ -2,303 +2,152 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hanan SOC Dashboard</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Hanan | Cyber Security</title>
 
 <style>
+/* ===== Base ===== */
 body {
-    margin: 0;
-    font-family: "Segoe UI", Arial;
-    background: #0f172a;
-    color: #e5e7eb;
+  margin: 0;
+  font-family: "Segoe UI", Arial;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #e5e7eb;
+  text-align: center;
 }
 
-.center {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* ===== Animation ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.box {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 12px;
-    width: 300px;
-}
-
-input, select, button {
-    width: 100%;
-    padding: 8px;
-    margin-top: 8px;
-    border-radius: 6px;
-}
-
-input, select {
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: #e5e7eb;
-}
-
-button {
-    background: #3b82f6;
-    border: none;
-    color: white;
-    cursor: pointer;
-}
-
-#app { display: none; }
-
+/* ===== Header ===== */
 header {
-    text-align: center;
-    padding: 15px;
-    background: #1e293b;
+  padding: 70px 20px 40px;
+  animation: fadeUp 1s ease;
 }
 
-.container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-    padding: 15px;
+header h1 {
+  margin: 0;
+  font-size: 34px;
 }
 
+header p {
+  color: #cbd5f5;
+  margin-top: 8px;
+}
+
+/* ===== Section ===== */
+.section {
+  margin: 40px 20px;
+}
+
+/* ===== Card (Glass effect) ===== */
 .card {
-    background: #1e293b;
-    padding: 15px;
-    border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 520px;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,0.1);
+
+  animation: fadeUp 1s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.delete-btn {
-    background: #334155;
-    color: white;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
+/* Hover effect */
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-.badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    margin-left: 10px;
+/* ===== Button ===== */
+a.button {
+  display: inline-block;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
 }
 
-.CRITICAL { background: #dc2626; }
-.HIGH { background: #f97316; }
-.MEDIUM { background: #facc15; color: black; }
-.LOW { background: #22c55e; }
+a.button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #3b82f6, #9333ea);
+}
 
+/* ===== List ===== */
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 10px;
+  transition: 0.3s;
+}
+
+/* cute hover */
+li:hover {
+  transform: translateX(5px);
+  color: #c4b5fd;
+}
 </style>
+
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="center">
-<div class="box">
-<h2>Enter Dashboard</h2>
-<input id="user" placeholder="Your name">
-<button onclick="enter()">Continue</button>
-</div>
-</div>
-
-<!-- APP -->
-<div id="app">
-
 <header>
-<h2>Hanan SOC Dashboard</h2>
-<button onclick="logout()">Logout</button>
+  <h1>Hanan ✨</h1>
+  <p>Cyber Security Student</p>
 </header>
 
-<div class="container">
+<!-- PROJECT -->
+<div class="section">
+  <h2>🚀 Projects</h2>
 
-<div class="card">
-<h3>Add Vulnerability</h3>
-<input id="cvss" placeholder="CVSS (0-10)">
-<button onclick="addVuln()">Add</button>
+  <div class="card">
+    <h3>SOC Dashboard</h3>
+    <p>
+      A cybersecurity dashboard that simulates SOC operations using CVSS analysis,
+      real-time visualization, and smart risk analysis.
+    </p>
+
+    <a class="button" href="https://hasiri044-rgb.github.io/cyber-scanner/?v=5" target="_blank">
+      🔗 Open Live Project
+    </a>
+  </div>
 </div>
 
-<div class="card">
-<h3>User Info</h3>
-<p id="who"></p>
-<p id="stats"></p>
+<!-- AI FEATURES -->
+<div class="section">
+  <h2>🧠 Advanced Security Features</h2>
+
+  <div class="card">
+    <ul>
+      <li>🤖 AI-based attack detection system (simulated)</li>
+      <li>📊 Intelligent log analysis (planned)</li>
+      <li>🦠 Malware detection using Machine Learning (concept)</li>
+    </ul>
+  </div>
 </div>
 
-<div class="card">
-<h3>
-Vulnerabilities
-<button onclick="clearData()" class="delete-btn">Clear</button>
-</h3>
+<!-- ABOUT -->
+<div class="section">
+  <h2>👩‍💻 About Me</h2>
 
-<input id="search" placeholder="Search..." oninput="update()">
-
-<select id="filter" onchange="update()">
-<option value="ALL">All</option>
-<option value="CRITICAL">Critical</option>
-<option value="HIGH">High</option>
-<option value="MEDIUM">Medium</option>
-<option value="LOW">Low</option>
-</select>
-
-<ul id="list"></ul>
+  <div class="card">
+    <p>
+      Cybersecurity student passionate about building practical security tools.
+      Focused on SOC operations, vulnerability analysis, and security monitoring.
+    </p>
+  </div>
 </div>
-
-<div class="card">
-<h3>Risk Chart</h3>
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
-<h3>Smart Analysis</h3>
-<p id="analysis"></p>
-</div>
-
-</div>
-</div>
-
-<script>
-
-let data = [];
-let chart;
-
-// LOGIN
-function enter() {
-let name = document.getElementById("user").value;
-if(!name) return alert("Enter name");
-
-sessionStorage.setItem("user", name);
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="block";
-document.getElementById("who").innerText = "User: " + name;
-
-update();
-}
-
-function logout() {
-sessionStorage.clear();
-location.reload();
-}
-
-function check() {
-let user = sessionStorage.getItem("user");
-if(user){
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="block";
-document.getElementById("who").innerText = "User: " + user;
-update();
-}
-}
-
-// ADD
-function addVuln() {
-let cvss = parseFloat(document.getElementById("cvss").value);
-if(isNaN(cvss) || cvss<0 || cvss>10) return alert("0-10 only");
-
-let level = classify(cvss);
-
-data.push({
-cvss,
-level,
-time: new Date().toLocaleTimeString()
-});
-
-update();
-}
-
-// CLASSIFY
-function classify(cvss){
-if(cvss>=9) return "CRITICAL";
-if(cvss>=7) return "HIGH";
-if(cvss>=4) return "MEDIUM";
-return "LOW";
-}
-
-// CLEAR
-function clearData(){
-data = [];
-update();
-}
-
-// UPDATE
-function update(){
-
-let list = document.getElementById("list");
-list.innerHTML="";
-
-let search = document.getElementById("search").value.toLowerCase();
-let filter = document.getElementById("filter").value;
-
-let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
-
-data.forEach(v=>{
-
-if(filter!=="ALL" && v.level!==filter) return;
-if(!v.cvss.toString().includes(search)) return;
-
-count[v.level]++;
-
-let li = document.createElement("li");
-li.innerHTML = `[${v.time}] CVSS ${v.cvss}
-<span class="badge ${v.level}">${v.level}</span>`;
-list.appendChild(li);
-
-});
-
-document.getElementById("stats").innerText = "Total: "+list.children.length;
-
-draw(count);
-analyze(count);
-}
-
-// CHART
-function draw(c){
-const canvas = document.getElementById("chart");
-
-if(chart) chart.destroy();
-
-chart = new Chart(canvas,{
-type:"pie",
-data:{
-labels:["Critical","High","Medium","Low"],
-datasets:[{
-data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
-backgroundColor:["#dc2626","#f97316","#facc15","#22c55e"]
-}]
-}
-});
-}
-
-// AI ANALYSIS
-function analyze(c){
-
-let total = c.CRITICAL + c.HIGH + c.MEDIUM + c.LOW;
-let text="";
-
-if(total===0){
-text="No data yet.";
-}
-else if(c.CRITICAL>0){
-text="🚨 High Risk: Critical vulnerabilities detected. Fix immediately.";
-}
-else if(c.HIGH>2){
-text="⚠️ Elevated Risk: Multiple high vulnerabilities.";
-}
-else if(c.MEDIUM>3){
-text="Moderate Risk: Needs review.";
-}
-else{
-text="✅ System stable.";
-}
-
-document.getElementById("analysis").innerText = text;
-}
-
-// INIT
-check();
-
-</script>
 
 </body>
 </html>
