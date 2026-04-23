@@ -2,152 +2,256 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hanan | Cyber Security</title>
+<title>Hanan SOC Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* ===== Base ===== */
 body {
-  margin: 0;
-  font-family: "Segoe UI", Arial;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #e5e7eb;
-  text-align: center;
+    margin:0;
+    font-family: "Segoe UI";
+    background:#0f172a;
+    color:#e5e7eb;
 }
 
-/* ===== Animation ===== */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+.container {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:15px;
+    padding:15px;
 }
 
-/* ===== Header ===== */
-header {
-  padding: 70px 20px 40px;
-  animation: fadeUp 1s ease;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 34px;
-}
-
-header p {
-  color: #cbd5f5;
-  margin-top: 8px;
-}
-
-/* ===== Section ===== */
-.section {
-  margin: 40px 20px;
-}
-
-/* ===== Card (Glass effect) ===== */
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  margin: 20px auto;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 520px;
-  text-align: left;
-  border: 1px solid rgba(255,255,255,0.1);
-
-  animation: fadeUp 1s ease;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background:#1e293b;
+    padding:15px;
+    border-radius:12px;
 }
 
-/* Hover effect */
-.card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+input, select, button {
+    width:100%;
+    margin-top:8px;
+    padding:8px;
+    border-radius:6px;
+    border:none;
 }
 
-/* ===== Button ===== */
-a.button {
-  display: inline-block;
-  margin-top: 12px;
-  background: linear-gradient(135deg, #60a5fa, #a78bfa);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 14px;
-  transition: 0.3s;
+button {
+    background:#3b82f6;
+    color:white;
+    cursor:pointer;
 }
 
-a.button:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #3b82f6, #9333ea);
+.badge {
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:12px;
 }
 
-/* ===== List ===== */
-ul {
-  padding-left: 20px;
-}
+.CRITICAL { background:#dc2626; }
+.HIGH { background:#f97316; }
+.MEDIUM { background:#facc15; color:black; }
+.LOW { background:#22c55e; }
 
-li {
-  margin-bottom: 10px;
-  transition: 0.3s;
-}
-
-/* cute hover */
-li:hover {
-  transform: translateX(5px);
-  color: #c4b5fd;
+.alert {
+    background:#dc2626;
+    padding:10px;
+    border-radius:8px;
+    margin-top:10px;
 }
 </style>
-
 </head>
 
 <body>
 
-<header>
-  <h1>Hanan ✨</h1>
-  <p>Cyber Security Student</p>
-</header>
+<div class="container">
 
-<!-- PROJECT -->
-<div class="section">
-  <h2>🚀 Projects</h2>
-
-  <div class="card">
-    <h3>SOC Dashboard</h3>
-    <p>
-      A cybersecurity dashboard that simulates SOC operations using CVSS analysis,
-      real-time visualization, and smart risk analysis.
-    </p>
-
-    <a class="button" href="https://hasiri044-rgb.github.io/cyber-scanner/?v=5" target="_blank">
-      🔗 Open Live Project
-    </a>
-  </div>
+<div class="card">
+<h3>Add Vulnerability</h3>
+<input id="cvss" placeholder="CVSS (0-10)">
+<button onclick="addVuln()">Analyze</button>
 </div>
 
-<!-- AI FEATURES -->
-<div class="section">
-  <h2>🧠 Advanced Security Features</h2>
-
-  <div class="card">
-    <ul>
-      <li>🤖 AI-based attack detection system (simulated)</li>
-      <li>📊 Intelligent log analysis (planned)</li>
-      <li>🦠 Malware detection using Machine Learning (concept)</li>
-    </ul>
-  </div>
+<div class="card">
+<h3>Filter</h3>
+<input id="search" placeholder="Search..." oninput="update()">
+<select id="filter" onchange="update()">
+<option value="ALL">All</option>
+<option value="CRITICAL">Critical</option>
+<option value="HIGH">High</option>
+<option value="MEDIUM">Medium</option>
+<option value="LOW">Low</option>
+</select>
 </div>
 
-<!-- ABOUT -->
-<div class="section">
-  <h2>👩‍💻 About Me</h2>
-
-  <div class="card">
-    <p>
-      Cybersecurity student passionate about building practical security tools.
-      Focused on SOC operations, vulnerability analysis, and security monitoring.
-    </p>
-  </div>
+<div class="card">
+<h3>Vulnerabilities</h3>
+<button onclick="clearData()">Clear</button>
+<ul id="list"></ul>
 </div>
+
+<div class="card">
+<h3>Risk Chart</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<h3>AI Analysis</h3>
+<p id="analysis"></p>
+<div id="alertBox"></div>
+</div>
+
+</div>
+
+<script>
+
+let data = [];
+let chart;
+
+// تصنيف
+function classify(cvss){
+    if(cvss>=9) return "CRITICAL";
+    if(cvss>=7) return "HIGH";
+    if(cvss>=4) return "MEDIUM";
+    return "LOW";
+}
+
+// 🤖 AI Logic (محاكاة)
+function aiEngine(cvss, level){
+
+    let score = 0;
+    let text = "";
+    let action = "";
+
+    // heuristic scoring
+    score += cvss * 10;
+
+    if(level==="CRITICAL") score += 50;
+    if(level==="HIGH") score += 30;
+
+    // تحليل
+    if(score > 120){
+        text = "🚨 Critical Threat Detected";
+        action = "Immediate isolation + patching required";
+    }
+    else if(score > 80){
+        text = "⚠️ High Risk Pattern";
+        action = "Urgent fix recommended";
+    }
+    else if(score > 40){
+        text = "Moderate Risk";
+        action = "Monitor and schedule patch";
+    }
+    else{
+        text = "Low Risk";
+        action = "No urgent action";
+    }
+
+    return {text, action};
+}
+
+// إضافة
+function addVuln(){
+
+    let cvss = parseFloat(document.getElementById("cvss").value);
+    if(isNaN(cvss) || cvss<0 || cvss>10){
+        alert("Enter 0-10");
+        return;
+    }
+
+    let level = classify(cvss);
+    let ai = aiEngine(cvss, level);
+
+    data.push({
+        cvss,
+        level,
+        aiText: ai.text,
+        fix: ai.action,
+        time: new Date().toLocaleTimeString()
+    });
+
+    update();
+}
+
+// تحديث
+function update(){
+
+    let list = document.getElementById("list");
+    list.innerHTML="";
+
+    let search = document.getElementById("search").value;
+    let filter = document.getElementById("filter").value;
+
+    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
+
+    let criticalFound = false;
+
+    data.forEach(v=>{
+
+        if(filter!=="ALL" && v.level!==filter) return;
+        if(!v.cvss.toString().includes(search)) return;
+
+        count[v.level]++;
+
+        if(v.level==="CRITICAL") criticalFound = true;
+
+        let li = document.createElement("li");
+        li.innerHTML = `
+        <b>[${v.time}] CVSS ${v.cvss}</b><br>
+        <span class="badge ${v.level}">${v.level}</span><br>
+        🤖 ${v.aiText}<br>
+        🔧 ${v.fix}
+        `;
+        list.appendChild(li);
+
+    });
+
+    draw(count);
+    globalAnalysis(count, criticalFound);
+}
+
+// تحليل عام
+function globalAnalysis(c, critical){
+
+    let text = "";
+
+    if(critical){
+        text = "🚨 System Under High Threat";
+        document.getElementById("alertBox").innerHTML =
+        '<div class="alert">Critical vulnerabilities detected!</div>';
+    }
+    else if(c.HIGH > 2){
+        text = "⚠️ Multiple high risks detected";
+    }
+    else{
+        text = "✅ System Stable";
+    }
+
+    document.getElementById("analysis").innerText = text;
+}
+
+// رسم
+function draw(c){
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"),{
+        type:"pie",
+        data:{
+            labels:["Critical","High","Medium","Low"],
+            datasets:[{
+                data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
+                backgroundColor:["#dc2626","#f97316","#facc15","#22c55e"]
+            }]
+        }
+    });
+}
+
+// حذف
+function clearData(){
+    data=[];
+    update();
+}
+
+</script>
 
 </body>
 </html>
