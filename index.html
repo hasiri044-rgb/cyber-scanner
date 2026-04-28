@@ -68,6 +68,7 @@ button {
 <h3>Add Vulnerability</h3>
 <input id="cvss" placeholder="CVSS (0-10)">
 <button onclick="addVuln()">Analyze</button>
+<button onclick="simulateAttack()">Simulate Attack</button>
 </div>
 
 <div class="card">
@@ -86,6 +87,11 @@ button {
 <h3>Vulnerabilities</h3>
 <button onclick="clearData()">Clear</button>
 <ul id="list"></ul>
+</div>
+
+<div class="card">
+<h3>Logs</h3>
+<ul id="logs"></ul>
 </div>
 
 <div class="card">
@@ -114,46 +120,47 @@ function classify(cvss){
     return "LOW";
 }
 
-// 🤖 AI Logic (محاكاة)
+// 🤖 AI Engine
 function aiEngine(cvss, level){
 
-    let score = 0;
-    let text = "";
-    let action = "";
-
-    // heuristic scoring
-    score += cvss * 10;
+    let score = cvss * 10;
 
     if(level==="CRITICAL") score += 50;
     if(level==="HIGH") score += 30;
 
-    // تحليل
     if(score > 120){
-        text = "🚨 Critical Threat Detected";
-        action = "Immediate isolation + patching required";
+        return {
+            text:"🚨 Critical Threat Detected",
+            action:"Immediate isolation + patch system"
+        };
     }
     else if(score > 80){
-        text = "⚠️ High Risk Pattern";
-        action = "Urgent fix recommended";
+        return {
+            text:"⚠️ High Risk Pattern",
+            action:"Fix vulnerability urgently"
+        };
     }
     else if(score > 40){
-        text = "Moderate Risk";
-        action = "Monitor and schedule patch";
+        return {
+            text:"Moderate Risk",
+            action:"Monitor and patch later"
+        };
     }
     else{
-        text = "Low Risk";
-        action = "No urgent action";
+        return {
+            text:"Low Risk",
+            action:"No urgent action"
+        };
     }
-
-    return {text, action};
 }
 
 // إضافة
 function addVuln(){
 
     let cvss = parseFloat(document.getElementById("cvss").value);
+
     if(isNaN(cvss) || cvss<0 || cvss>10){
-        alert("Enter 0-10");
+        alert("Enter CVSS 0-10");
         return;
     }
 
@@ -171,17 +178,46 @@ function addVuln(){
     update();
 }
 
+// 🎭 محاكاة هجوم
+function simulateAttack(){
+
+    let attacks = [
+        {type:"SQL Injection", cvss:9.8},
+        {type:"XSS Attack", cvss:8.2},
+        {type:"Brute Force", cvss:7.5},
+        {type:"Malware Activity", cvss:9.5},
+        {type:"Suspicious Login", cvss:5.2}
+    ];
+
+    let attack = attacks[Math.floor(Math.random()*attacks.length)];
+
+    let level = classify(attack.cvss);
+    let ai = aiEngine(attack.cvss, level);
+
+    data.push({
+        cvss: attack.cvss,
+        level: level,
+        aiText: attack.type + " → " + ai.text,
+        fix: ai.action,
+        time: new Date().toLocaleTimeString()
+    });
+
+    update();
+}
+
 // تحديث
 function update(){
 
     let list = document.getElementById("list");
+    let logs = document.getElementById("logs");
+
     list.innerHTML="";
+    logs.innerHTML="";
 
     let search = document.getElementById("search").value;
     let filter = document.getElementById("filter").value;
 
     let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
-
     let criticalFound = false;
 
     data.forEach(v=>{
@@ -190,7 +226,6 @@ function update(){
         if(!v.cvss.toString().includes(search)) return;
 
         count[v.level]++;
-
         if(v.level==="CRITICAL") criticalFound = true;
 
         let li = document.createElement("li");
@@ -202,27 +237,36 @@ function update(){
         `;
         list.appendChild(li);
 
+        let log = document.createElement("li");
+        log.innerText = `[${v.time}] ${v.aiText}`;
+        logs.appendChild(log);
+
     });
 
     draw(count);
     globalAnalysis(count, criticalFound);
 }
 
-// تحليل عام
+// تحليل عام + صوت
 function globalAnalysis(c, critical){
 
     let text = "";
 
     if(critical){
-        text = "🚨 System Under High Threat";
+        text = "🚨 ACTIVE ATTACK DETECTED";
+
         document.getElementById("alertBox").innerHTML =
-        '<div class="alert">Critical vulnerabilities detected!</div>';
+        '<div class="alert">⚠️ System under attack!</div>';
+
+        let audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
+        audio.play();
     }
     else if(c.HIGH > 2){
         text = "⚠️ Multiple high risks detected";
     }
     else{
         text = "✅ System Stable";
+        document.getElementById("alertBox").innerHTML = "";
     }
 
     document.getElementById("analysis").innerText = text;
