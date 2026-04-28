@@ -6,59 +6,96 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* 🌌 خلفية متحركة */
 body {
-    margin:0;
-    font-family: "Segoe UI";
-    background:#0f172a;
-    color:#e5e7eb;
+  margin:0;
+  font-family: "Segoe UI", Arial;
+  background: linear-gradient(-45deg, #0f172a, #1e293b, #020617, #1e1b4b);
+  background-size: 400% 400%;
+  animation: gradientMove 10s ease infinite;
+  color: #e5e7eb;
 }
 
-.container {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:15px;
-    padding:15px;
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
+/* ✨ كروت زجاجية */
 .card {
-    background:#1e293b;
-    padding:15px;
-    border-radius:12px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 18px;
+  transition: 0.3s;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  animation: fadeUp 0.8s ease;
 }
 
-input, select, button {
-    width:100%;
-    margin-top:8px;
-    padding:8px;
-    border-radius:6px;
-    border:none;
+/* 💎 Hover احترافي */
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 30px rgba(59,130,246,0.4);
 }
 
+/* 🎬 أنيميشن دخول */
+@keyframes fadeUp {
+  from {opacity:0; transform: translateY(20px);}
+  to {opacity:1; transform: translateY(0);}
+}
+
+/* 🎯 أزرار فخمة */
 button {
-    background:#3b82f6;
-    color:white;
-    cursor:pointer;
+  background: linear-gradient(135deg,#3b82f6,#9333ea);
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:8px;
+  cursor:pointer;
+  transition:0.3s;
 }
 
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #3b82f6;
+}
+
+/* 🔍 Input */
+input, select {
+  background:#020617;
+  border:1px solid #334155;
+  color:#e5e7eb;
+  border-radius:6px;
+  padding:8px;
+}
+
+/* 🏷️ Badges */
 .badge {
-    padding:4px 8px;
-    border-radius:6px;
-    font-size:12px;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
 }
 
-.CRITICAL { background:#dc2626; }
+.CRITICAL { background:#ef4444; }
 .HIGH { background:#f97316; }
-.MEDIUM { background:#facc15; color:black; }
+.MEDIUM { background:#eab308; color:black; }
 .LOW { background:#22c55e; }
 
+/* 🚨 Alert */
 .alert {
-    background:#dc2626;
-    padding:10px;
-    border-radius:8px;
-    margin-top:10px;
+  background: linear-gradient(90deg,#ef4444,#7f1d1d);
+  padding:10px;
+  border-radius:8px;
+  animation: pulse 1s infinite;
 }
-</style>
-</head>
+
+@keyframes pulse {
+  0% {opacity:1;}
+  50% {opacity:0.6;}
+  100% {opacity:1;}
+	}
 
 <body>
 
