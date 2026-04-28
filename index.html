@@ -2,336 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hanan SOC Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Cyber Risk Analysis Dashboard</title>
 
 <style>
-/* 🌌 خلفية متحركة */
 body {
-  margin:0;
-  font-family: "Segoe UI", Arial;
-  background: linear-gradient(-45deg, #0f172a, #1e293b, #020617, #1e1b4b);
-  background-size: 400% 400%;
-  animation: gradientMove 10s ease infinite;
-  color: #e5e7eb;
+  font-family: Arial;
+  background: #0a0f1f;
+  color: #ffffff;
+  text-align: center;
 }
 
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+h1 {
+  margin-top: 20px;
 }
 
-/* ✨ كروت زجاجية */
-.card {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  padding: 18px;
-  transition: 0.3s;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-  animation: fadeUp 0.8s ease;
+.container {
+  margin-top: 30px;
 }
 
-/* 💎 Hover احترافي */
-.card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 0 30px rgba(59,130,246,0.4);
+select, button {
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+  border: none;
 }
 
-/* 🎬 أنيميشن دخول */
-@keyframes fadeUp {
-  from {opacity:0; transform: translateY(20px);}
-  to {opacity:1; transform: translateY(0);}
-}
-
-/* 🎯 أزرار فخمة */
 button {
-  background: linear-gradient(135deg,#3b82f6,#9333ea);
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:8px;
-  cursor:pointer;
-  transition:0.3s;
+  background: #00c2ff;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #3b82f6;
+.card {
+  margin-top: 20px;
+  background: #1c2438;
+  padding: 20px;
+  border-radius: 12px;
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  box-shadow: 0 0 10px #000;
 }
 
-/* 🔍 Input */
-input, select {
-  background:#020617;
-  border:1px solid #334155;
-  color:#e5e7eb;
-  border-radius:6px;
-  padding:8px;
+.high { color: #ff4d4d; font-weight: bold; }
+.medium { color: #ffb84d; font-weight: bold; }
+.low { color: #4dff88; font-weight: bold; }
+
+.label {
+  color: #aaa;
 }
-
-/* 🏷️ Badges */
-.badge {
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-}
-
-.CRITICAL { background:#ef4444; }
-.HIGH { background:#f97316; }
-.MEDIUM { background:#eab308; color:black; }
-.LOW { background:#22c55e; }
-
-/* 🚨 Alert */
-.alert {
-  background: linear-gradient(90deg,#ef4444,#7f1d1d);
-  padding:10px;
-  border-radius:8px;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% {opacity:1;}
-  50% {opacity:0.6;}
-  100% {opacity:1;}
-	}
+</style>
+</head>
 
 <body>
 
+<h1>🔐 Cybersecurity Risk Analysis System</h1>
+
 <div class="container">
 
-<div class="card">
-<h3>Add Vulnerability</h3>
-<input id="cvss" placeholder="CVSS (0-10)">
-<button onclick="addVuln()">Analyze</button>
-<button onclick="simulateAttack()">Simulate Attack</button>
-</div>
-
-<div class="card">
-<h3>Filter</h3>
-<input id="search" placeholder="Search..." oninput="update()">
-<select id="filter" onchange="update()">
-<option value="ALL">All</option>
-<option value="CRITICAL">Critical</option>
-<option value="HIGH">High</option>
-<option value="MEDIUM">Medium</option>
-<option value="LOW">Low</option>
+<select id="vulnType">
+  <option value="XSS">Cross-Site Scripting (XSS)</option>
+  <option value="SQLi">SQL Injection</option>
+  <option value="Weak">Weak Password Policy</option>
 </select>
-</div>
 
-<div class="card">
-<h3>Vulnerabilities</h3>
-<button onclick="clearData()">Clear</button>
-<ul id="list"></ul>
-</div>
+<button onclick="analyze()">Analyze Vulnerability</button>
 
-<div class="card">
-<h3>Logs</h3>
-<ul id="logs"></ul>
-</div>
-
-<div class="card">
-<h3>Risk Chart</h3>
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
-<h3>AI Analysis</h3>
-<p id="analysis"></p>
-<div id="alertBox"></div>
-</div>
+<div id="result" class="card"></div>
 
 </div>
 
 <script>
+function analyze() {
+  let type = document.getElementById("vulnType").value;
 
-let data = [];
-let chart;
+  let score = 0;
+  let risk = "";
+  let description = "";
+  let recommendation = "";
 
-// تصنيف
-function classify(cvss){
-    if(cvss>=9) return "CRITICAL";
-    if(cvss>=7) return "HIGH";
-    if(cvss>=4) return "MEDIUM";
-    return "LOW";
+  if (type === "XSS") {
+    score = 6.5;
+    risk = "MEDIUM";
+    description = "This vulnerability allows attackers to inject malicious scripts into web pages viewed by users.";
+    recommendation = "Implement input sanitization and enforce Content Security Policy (CSP).";
+  }
+
+  if (type === "SQLi") {
+    score = 9.0;
+    risk = "HIGH";
+    description = "This vulnerability allows attackers to manipulate database queries and access sensitive data.";
+    recommendation = "Use prepared statements and parameterized queries. Avoid direct user input in SQL queries.";
+  }
+
+  if (type === "Weak") {
+    score = 5.0;
+    risk = "MEDIUM";
+    description = "Weak authentication mechanisms may allow unauthorized access to systems.";
+    recommendation = "Enforce strong password policies and enable Multi-Factor Authentication (MFA).";
+  }
+
+  document.getElementById("result").innerHTML = `
+    <h2>Risk Level: <span class="${risk.toLowerCase()}">${risk}</span></h2>
+
+    <p><span class="label">CVSS-like Score:</span> ${score}/10</p>
+
+    <p><span class="label">Description:</span><br>${description}</p>
+
+    <p><span class="label">Recommendation:</span><br>${recommendation}</p>
+  `;
 }
-
-// 🤖 AI Engine
-function aiEngine(cvss, level){
-
-    let score = cvss * 10;
-
-    if(level==="CRITICAL") score += 50;
-    if(level==="HIGH") score += 30;
-
-    if(score > 120){
-        return {
-            text:"🚨 Critical Threat Detected",
-            action:"Immediate isolation + patch system"
-        };
-    }
-    else if(score > 80){
-        return {
-            text:"⚠️ High Risk Pattern",
-            action:"Fix vulnerability urgently"
-        };
-    }
-    else if(score > 40){
-        return {
-            text:"Moderate Risk",
-            action:"Monitor and patch later"
-        };
-    }
-    else{
-        return {
-            text:"Low Risk",
-            action:"No urgent action"
-        };
-    }
-}
-
-// إضافة
-function addVuln(){
-
-    let cvss = parseFloat(document.getElementById("cvss").value);
-
-    if(isNaN(cvss) || cvss<0 || cvss>10){
-        alert("Enter CVSS 0-10");
-        return;
-    }
-
-    let level = classify(cvss);
-    let ai = aiEngine(cvss, level);
-
-    data.push({
-        cvss,
-        level,
-        aiText: ai.text,
-        fix: ai.action,
-        time: new Date().toLocaleTimeString()
-    });
-
-    update();
-}
-
-// 🎭 محاكاة هجوم
-function simulateAttack(){
-
-    let attacks = [
-        {type:"SQL Injection", cvss:9.8},
-        {type:"XSS Attack", cvss:8.2},
-        {type:"Brute Force", cvss:7.5},
-        {type:"Malware Activity", cvss:9.5},
-        {type:"Suspicious Login", cvss:5.2}
-    ];
-
-    let attack = attacks[Math.floor(Math.random()*attacks.length)];
-
-    let level = classify(attack.cvss);
-    let ai = aiEngine(attack.cvss, level);
-
-    data.push({
-        cvss: attack.cvss,
-        level: level,
-        aiText: attack.type + " → " + ai.text,
-        fix: ai.action,
-        time: new Date().toLocaleTimeString()
-    });
-
-    update();
-}
-
-// تحديث
-function update(){
-
-    let list = document.getElementById("list");
-    let logs = document.getElementById("logs");
-
-    list.innerHTML="";
-    logs.innerHTML="";
-
-    let search = document.getElementById("search").value;
-    let filter = document.getElementById("filter").value;
-
-    let count = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
-    let criticalFound = false;
-
-    data.forEach(v=>{
-
-        if(filter!=="ALL" && v.level!==filter) return;
-        if(!v.cvss.toString().includes(search)) return;
-
-        count[v.level]++;
-        if(v.level==="CRITICAL") criticalFound = true;
-
-        let li = document.createElement("li");
-        li.innerHTML = `
-        <b>[${v.time}] CVSS ${v.cvss}</b><br>
-        <span class="badge ${v.level}">${v.level}</span><br>
-        🤖 ${v.aiText}<br>
-        🔧 ${v.fix}
-        `;
-        list.appendChild(li);
-
-        let log = document.createElement("li");
-        log.innerText = `[${v.time}] ${v.aiText}`;
-        logs.appendChild(log);
-
-    });
-
-    draw(count);
-    globalAnalysis(count, criticalFound);
-}
-
-// تحليل عام + صوت
-function globalAnalysis(c, critical){
-
-    let text = "";
-
-    if(critical){
-        text = "🚨 ACTIVE ATTACK DETECTED";
-
-        document.getElementById("alertBox").innerHTML =
-        '<div class="alert">⚠️ System under attack!</div>';
-
-        let audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
-        audio.play();
-    }
-    else if(c.HIGH > 2){
-        text = "⚠️ Multiple high risks detected";
-    }
-    else{
-        text = "✅ System Stable";
-        document.getElementById("alertBox").innerHTML = "";
-    }
-
-    document.getElementById("analysis").innerText = text;
-}
-
-// رسم
-function draw(c){
-
-    if(chart) chart.destroy();
-
-    chart = new Chart(document.getElementById("chart"),{
-        type:"pie",
-        data:{
-            labels:["Critical","High","Medium","Low"],
-            datasets:[{
-                data:[c.CRITICAL,c.HIGH,c.MEDIUM,c.LOW],
-                backgroundColor:["#dc2626","#f97316","#facc15","#22c55e"]
-            }]
-        }
-    });
-}
-
-// حذف
-function clearData(){
-    data=[];
-    update();
-}
-
 </script>
 
 </body>
