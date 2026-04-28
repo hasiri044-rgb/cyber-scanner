@@ -2,55 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Risk Analysis Dashboard</title>
+<title>SOC Advanced Cybersecurity Platform</title>
 
 <style>
 body {
-  font-family: Arial;
-  background: #0a0f1f;
-  color: #ffffff;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #050914;
+  color: white;
+}
+
+/* HEADER */
+header {
+  background: #0f172a;
+  padding: 20px;
   text-align: center;
+  font-size: 20px;
+  font-weight: bold;
 }
 
-h1 {
-  margin-top: 20px;
-}
-
+/* LAYOUT */
 .container {
-  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  padding: 20px;
 }
 
+/* PANELS */
+.panel {
+  background: #111c33;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+/* INPUTS */
 select, button {
+  width: 100%;
   padding: 10px;
-  margin: 10px;
+  margin-top: 10px;
   border-radius: 8px;
   border: none;
 }
 
 button {
   background: #00c2ff;
-  color: black;
   font-weight: bold;
   cursor: pointer;
 }
 
-.card {
-  margin-top: 20px;
-  background: #1c2438;
-  padding: 20px;
-  border-radius: 12px;
-  width: 60%;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-  box-shadow: 0 0 10px #000;
-}
-
+/* COLORS */
 .high { color: #ff4d4d; font-weight: bold; }
 .medium { color: #ffb84d; font-weight: bold; }
 .low { color: #4dff88; font-weight: bold; }
 
-.label {
+/* LOG */
+.log {
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 13px;
+  margin-top: 10px;
+  background: #0b1224;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* CHART */
+.bar {
+  height: 15px;
+  margin: 5px 0;
+  border-radius: 5px;
+}
+
+.red { background: #ff4d4d; }
+.orange { background: #ffb84d; }
+.green { background: #4dff88; }
+
+.small {
+  font-size: 12px;
   color: #aaa;
 }
 </style>
@@ -58,62 +88,149 @@ button {
 
 <body>
 
-<h1>🔐 Cybersecurity Risk Analysis System</h1>
+<header>
+🔐 SOC Advanced Cybersecurity Monitoring System
+</header>
 
 <div class="container">
 
-<select id="vulnType">
-  <option value="XSS">Cross-Site Scripting (XSS)</option>
-  <option value="SQLi">SQL Injection</option>
-  <option value="Weak">Weak Password Policy</option>
-</select>
+<!-- INPUT -->
+<div class="panel">
+  <h3>Vulnerability Analyzer</h3>
 
-<button onclick="analyze()">Analyze Vulnerability</button>
+  <select id="impact">
+    <option value="High">Impact - High</option>
+    <option value="Medium">Impact - Medium</option>
+    <option value="Low">Impact - Low</option>
+  </select>
 
-<div id="result" class="card"></div>
+  <select id="exploit">
+    <option value="Easy">Exploitability - Easy</option>
+    <option value="Medium">Exploitability - Medium</option>
+    <option value="Hard">Exploitability - Hard</option>
+  </select>
+
+  <select id="scope">
+    <option value="Changed">Scope - Changed</option>
+    <option value="Unchanged">Scope - Unchanged</option>
+  </select>
+
+  <button onclick="analyze()">Run Analysis</button>
+
+  <div id="result" style="margin-top:15px;"></div>
+</div>
+
+<!-- REPORT -->
+<div class="panel">
+  <h3>Security Report</h3>
+  <div id="report" class="small">No analysis yet</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="panel">
+  <h3>Live SOC Dashboard</h3>
+
+  <div>🔴 High: <span id="high">0</span></div>
+  <div>🟡 Medium: <span id="medium">0</span></div>
+  <div>🟢 Low: <span id="low">0</span></div>
+
+  <h4>Risk Distribution</h4>
+  <div class="bar red" id="barHigh"></div>
+  <div class="bar orange" id="barMedium"></div>
+  <div class="bar green" id="barLow"></div>
+
+  <h4>Activity Log</h4>
+  <div id="log" class="log"></div>
+</div>
 
 </div>
 
 <script>
+
+let stats = JSON.parse(localStorage.getItem("stats")) || {
+  high: 0,
+  medium: 0,
+  low: 0
+};
+
+updateDashboard();
+
 function analyze() {
-  let type = document.getElementById("vulnType").value;
+
+  let impact = document.getElementById("impact").value;
+  let exploit = document.getElementById("exploit").value;
+  let scope = document.getElementById("scope").value;
 
   let score = 0;
-  let risk = "";
-  let description = "";
-  let recommendation = "";
 
-  if (type === "XSS") {
-    score = 6.5;
-    risk = "MEDIUM";
-    description = "This vulnerability allows attackers to inject malicious scripts into web pages viewed by users.";
-    recommendation = "Implement input sanitization and enforce Content Security Policy (CSP).";
-  }
+  if (impact === "High") score += 4;
+  if (impact === "Medium") score += 2;
 
-  if (type === "SQLi") {
-    score = 9.0;
-    risk = "HIGH";
-    description = "This vulnerability allows attackers to manipulate database queries and access sensitive data.";
-    recommendation = "Use prepared statements and parameterized queries. Avoid direct user input in SQL queries.";
-  }
+  if (exploit === "Easy") score += 4;
+  if (exploit === "Medium") score += 2;
 
-  if (type === "Weak") {
-    score = 5.0;
-    risk = "MEDIUM";
-    description = "Weak authentication mechanisms may allow unauthorized access to systems.";
-    recommendation = "Enforce strong password policies and enable Multi-Factor Authentication (MFA).";
-  }
+  if (scope === "Changed") score += 2;
 
-  document.getElementById("result").innerHTML = `
-    <h2>Risk Level: <span class="${risk.toLowerCase()}">${risk}</span></h2>
+  let level = "";
 
-    <p><span class="label">CVSS-like Score:</span> ${score}/10</p>
+  if (score >= 8) level = "HIGH";
+  else if (score >= 5) level = "MEDIUM";
+  else level = "LOW";
 
-    <p><span class="label">Description:</span><br>${description}</p>
+  // stats
+  stats[level.toLowerCase()]++;
+  localStorage.setItem("stats", JSON.stringify(stats));
 
-    <p><span class="label">Recommendation:</span><br>${recommendation}</p>
+  // result
+  document.getElementById("result").innerHTML =
+    `<div class="${level.toLowerCase()}">
+      Risk Level: ${level}<br>
+      Score: ${score}/10
+    </div>`;
+
+  // report
+  document.getElementById("report").innerHTML = `
+    <b>CVSS-like Security Assessment</b><br><br>
+    Impact: ${impact}<br>
+    Exploitability: ${exploit}<br>
+    Scope: ${scope}<br><br>
+
+    <b>Recommendation:</b><br>
+    ${getRecommendation(level)}
   `;
+
+  // log
+  let log = document.getElementById("log");
+  let item = document.createElement("div");
+  item.innerHTML = `${level} risk detected (score ${score})`;
+  log.prepend(item);
+
+  updateDashboard();
 }
+
+function getRecommendation(level) {
+  if (level === "HIGH") {
+    return "Critical: Immediate patching required. Restrict system access.";
+  }
+  if (level === "MEDIUM") {
+    return "Moderate risk: Apply mitigation and monitor system.";
+  }
+  return "Low risk: Maintain standard monitoring.";
+}
+
+function updateDashboard() {
+
+  document.getElementById("high").innerText = stats.high;
+  document.getElementById("medium").innerText = stats.medium;
+  document.getElementById("low").innerText = stats.low;
+
+  let total = stats.high + stats.medium + stats.low || 1;
+
+  document.getElementById("barHigh").style.width = (stats.high/total*100) + "%";
+  document.getElementById("barMedium").style.width = (stats.medium/total*100) + "%";
+  document.getElementById("barLow").style.width = (stats.low/total*100) + "%";
+}
+
 </script>
 
 </body>
